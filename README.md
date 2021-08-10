@@ -8,3 +8,4 @@ Lessons of SQL
 Plan:
 * [ ] Manipulations (`create table`, `insert into`, `select`, `alter table`, `update`, `delete from`)
 * [ ] Queries (`select`, `as`, `distinct`, `where`, `like`, `and`, `or`, `order by`, `limit`, `case`)
+* [ ] Aggregations (`count`, `sum`, `min/max`, `avg`, `round`, `group by`, `having`)
