@@ -31,7 +31,10 @@ def add_users(connection: sqlite3.Connection) -> List[int]:
         print(user)
     print()
 
-    return [user_id for (user_id,) in cursor.execute("SELECT id from users").fetchall()]
+    user_ids = [user_id for (user_id,) in cursor.execute("SELECT id from users").fetchall()]
+    cursor.close()
+
+    return user_ids
 
 
 def add_services(connection: sqlite3.Connection) -> List[int]:
@@ -61,7 +64,10 @@ def add_services(connection: sqlite3.Connection) -> List[int]:
         print(user)
     print()
 
-    return [service_id for (service_id,) in cursor.execute("SELECT id from services").fetchall()]
+    service_ids = [service_id for (service_id,) in cursor.execute("SELECT id from services").fetchall()]
+    cursor.close()
+
+    return service_ids
 
 
 def add_usages(connection: sqlite3.Connection,
@@ -103,6 +109,8 @@ def add_usages(connection: sqlite3.Connection,
         print(usage)
     print()
 
+    cursor.close()
+
 
 def filter_usages(connection: sqlite3.Connection):
     cursor = connection.cursor()
@@ -112,6 +120,7 @@ def filter_usages(connection: sqlite3.Connection):
     )
 
     connection.commit()
+    cursor.close()
 
 
 def update_usages(connection: sqlite3.Connection):
@@ -123,6 +132,7 @@ def update_usages(connection: sqlite3.Connection):
     )
 
     connection.commit()
+    cursor.close()
 
 
 def main():
@@ -151,6 +161,7 @@ def main():
     update_usages(connection)
     print("count of service `1` after update:", cursor.execute(service_1_usages_query).fetchone()[0])
 
+    cursor.close()
     connection.close()
 
 
