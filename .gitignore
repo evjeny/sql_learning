@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Idea files
+.idea/
+
+# Project database
+service_usage.db
