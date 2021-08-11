@@ -31,7 +31,7 @@ def add_users(connection: sqlite3.Connection) -> List[int]:
         print(user)
     print()
 
-    return [user_id for (user_id, ) in cursor.execute("SELECT id from users").fetchall()]
+    return [user_id for (user_id,) in cursor.execute("SELECT id from users").fetchall()]
 
 
 def add_services(connection: sqlite3.Connection) -> List[int]:
@@ -64,10 +64,10 @@ def add_services(connection: sqlite3.Connection) -> List[int]:
     return [service_id for (service_id,) in cursor.execute("SELECT id from services").fetchall()]
 
 
-def add_usage(connection: sqlite3.Connection,
-              user_ids: List[int], service_ids: List[int],
-              min_usages: int = 0, max_usages: int = 22,
-              min_period_days: int = 1, max_period_days: int = 199):
+def add_usages(connection: sqlite3.Connection,
+               user_ids: List[int], service_ids: List[int],
+               min_usages: int = 0, max_usages: int = 22,
+               min_period_days: int = 1, max_period_days: int = 199):
     cursor = connection.cursor()
 
     cursor.execute('''DROP TABLE IF EXISTS usages''')
@@ -89,8 +89,8 @@ def add_usage(connection: sqlite3.Connection,
         begin_date = datetime.datetime.fromtimestamp(begin_ts)
 
         for date, service_id in zip(
-            [begin_date + datetime.timedelta(days=i) for i in range(n_usages)],
-            [random.choice(service_ids) for _ in range(n_usages)]
+                [begin_date + datetime.timedelta(days=i) for i in range(n_usages)],
+                [random.choice(service_ids) for _ in range(n_usages)]
         ):
             cursor.execute(
                 '''INSERT INTO usages (user_id, service_id, timestamp) VALUES (?, ?, ?)''',
@@ -104,17 +104,52 @@ def add_usage(connection: sqlite3.Connection,
     print()
 
 
+def filter_usages(connection: sqlite3.Connection):
+    cursor = connection.cursor()
+
+    cursor.execute(
+        '''DELETE FROM usages WHERE usages.timestamp > "2021-09-01 00:00:01"'''
+    )
+
+    connection.commit()
+
+
+def update_usages(connection: sqlite3.Connection):
+    cursor = connection.cursor()
+
+    cursor.execute(
+        '''UPDATE usages set service_id = 1 WHERE
+        usages.service_id = 2 AND usages.timestamp < "2021-08-01 00:00:01"'''
+    )
+
+    connection.commit()
+
+
 def main():
     connection = sqlite3.connect("service_usage.db")
 
     user_ids = add_users(connection)
     service_ids = add_services(connection)
-    add_usage(connection, user_ids, service_ids)
+    add_usages(connection, user_ids, service_ids)
 
     cursor = connection.cursor()
     print("n_users:", cursor.execute("SELECT COUNT(*) FROM users").fetchone()[0])
     print("n_services:", cursor.execute("SELECT COUNT(*) FROM services").fetchone()[0])
     print("n_usages:", cursor.execute("SELECT COUNT(*) FROM usages").fetchone()[0])
+    print("max usage date:", cursor.execute("SELECT MAX(usages.timestamp) FROM usages").fetchone()[0])
+    print()
+
+    filter_usages(connection)
+    print("n_usages after filtering:", cursor.execute("SELECT COUNT(*) FROM usages").fetchone()[0])
+    print("max usage date:", cursor.execute("SELECT MAX(usages.timestamp) FROM usages").fetchone()[0])
+    print()
+
+    service_1_usages_query = '''SELECT COUNT(*) FROM usages WHERE
+          usages.timestamp < "2021-08-01 00:00:01"
+          AND usages.service_id = 1'''
+    print("count of service `1` before update:", cursor.execute(service_1_usages_query).fetchone()[0])
+    update_usages(connection)
+    print("count of service `1` after update:", cursor.execute(service_1_usages_query).fetchone()[0])
 
     connection.close()
 
