@@ -112,6 +112,47 @@ def add_usages(connection: sqlite3.Connection,
     cursor.close()
 
 
+def add_week_numbers(connection: sqlite3.Connection):
+    cursor = connection.cursor()
+
+    cursor.execute('''DROP TABLE IF EXISTS week_numbers''')
+    cursor.execute('''CREATE TABLE week_numbers (week_num INTEGER PRIMARY KEY AUTOINCREMENT)''')
+    cursor.executemany('''INSERT INTO week_numbers (week_num) VALUES (?)''',
+                       list(zip(range(54))))
+    connection.commit()
+
+    print("week_numbers:")
+    print(cursor.execute('''SELECT * from week_numbers LIMIT 3''').fetchall())
+    print()
+
+    cursor.close()
+
+
+def add_sales(connection: sqlite3.Connection):
+    cursor = connection.cursor()
+
+    cursor.execute('''DROP TABLE IF EXISTS sales''')
+    cursor.execute('''CREATE TABLE sales (id INTEGER PRIMARY KEY AUTOINCREMENT,
+            week_begin INTEGER, week_end INTEGER, sale INTEGER)''')
+
+    for _ in range(20):
+        week_begin = random.randint(0, 53)
+        week_end = week_begin + random.randint(1, 3)
+        sale = random.randint(1, 20)
+        cursor.execute(
+            '''INSERT INTO sales (week_begin, week_end, sale) VALUES (?, ?, ?)''',
+            (week_begin, week_end, sale)
+        )
+    connection.commit()
+
+    print("sales:")
+    for week_begin, week_end, sale in cursor.execute(
+            "SELECT week_begin, week_end, sale FROM sales LIMIT 3"
+    ).fetchall():
+        print(f"{week_begin}-{week_end}: sale {sale}%")
+    print()
+
+
 def filter_usages(connection: sqlite3.Connection):
     cursor = connection.cursor()
 
@@ -137,12 +178,14 @@ def update_usages(connection: sqlite3.Connection):
 
 def main():
     connection = sqlite3.connect("service_usage.db")
+    cursor = connection.cursor()
 
     user_ids = add_users(connection)
     service_ids = add_services(connection)
     add_usages(connection, user_ids, service_ids)
+    add_week_numbers(connection)
+    add_sales(connection)
 
-    cursor = connection.cursor()
     print("n_users:", cursor.execute("SELECT COUNT(*) FROM users").fetchone()[0])
     print("n_services:", cursor.execute("SELECT COUNT(*) FROM services").fetchone()[0])
     print("n_usages:", cursor.execute("SELECT COUNT(*) FROM usages").fetchone()[0])
