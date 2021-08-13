@@ -4,8 +4,10 @@ import sqlite3
 
 def get_table_info(cursor: sqlite3.Cursor, table_name: str):
     print(f"===={table_name}====")
+    # get column names
     columns = [column for (column, *_) in cursor.execute(f"SELECT * FROM {table_name} LIMIT 1").description]
     print("columns:", columns)
+    # get number of rows
     print("n_rows:", cursor.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0])
     print()
 
@@ -17,6 +19,7 @@ def tables_info(cursor: sqlite3.Cursor):
 
 
 def name_lengths(cursor: sqlite3.Cursor):
+    # apply functions `AVG`, `MIN` and `MAX` to user name lengths
     for pretty_name, fun_name in [("Average", "AVG"), ("Minimal", "MIN"), ("Maximal", "MAX")]:
         print(f"{pretty_name} name length:",
               cursor.execute(f"SELECT {fun_name}(LENGTH(users.name)) FROM users").fetchone()[0],
@@ -25,6 +28,7 @@ def name_lengths(cursor: sqlite3.Cursor):
 
 
 def beebo_counter(cursor: sqlite3.Cursor):
+    # count appearances of string `beebo` in user names
     print("`beebo` appears in user names:",
           cursor.execute("SELECT COUNT(*) FROM users WHERE users.name LIKE '%beebo%'").fetchone()[0],
           "times")
@@ -32,12 +36,13 @@ def beebo_counter(cursor: sqlite3.Cursor):
 
 
 def most_recent_uses(cursor: sqlite3.Cursor, n: int = 5):
+    # sort usages in descending order by timestamp and print last used `n` service names
     last_services = cursor.execute(
         f'''WITH last AS (
-                    SELECT * FROM usages ORDER BY timestamp DESC
-                )
-                SELECT last.timestamp, services.name FROM last JOIN services
-                ON last.service_id = services.id LIMIT {n}'''
+            SELECT * FROM usages ORDER BY timestamp DESC
+        )
+        SELECT last.timestamp, services.name FROM last JOIN services
+        ON last.service_id = services.id LIMIT {n}'''
     ).fetchall()
     print("Last used services:")
     for (timestamp, service_name, ) in last_services:
@@ -50,6 +55,8 @@ def datetime_to_week_day(d: str) -> int:
 
 
 def week_day_usage(cursor: sqlite3.Cursor):
+    # extract week days from `usages` and get per day usage statistics
+    # also each week day number converted to its string representation
     day_stats = cursor.execute(
         '''WITH week_days as (
             SELECT week_day(timestamp) as week_day FROM usages
@@ -77,6 +84,7 @@ def week_day_usage(cursor: sqlite3.Cursor):
 
 def main():
     connection = sqlite3.connect("service_usage.db")
+    # user defined function that can be called in SQL queries
     connection.create_function("week_day", 1, datetime_to_week_day)
     cursor = connection.cursor()
 

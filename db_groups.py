@@ -2,6 +2,7 @@ import sqlite3
 
 
 def top_weeks(cursor: sqlite3.Cursor):
+    # count usages per weeks and select top 3 weeks (by usage) with more than 100 requests
     week_stats = cursor.execute(
         f'''SELECT strftime('%W', timestamp) AS week_num, COUNT(*) AS requests FROM usages
         GROUP BY week_num HAVING requests > 100 ORDER BY requests DESC LIMIT 3'''

@@ -2,6 +2,7 @@ import sqlite3
 
 
 def most_sales(cursor: sqlite3.Cursor):
+    # get total sale for each week of year
     sales_stats = cursor.execute(
         '''WITH week_sales AS (
             SELECT * FROM sales CROSS JOIN week_numbers

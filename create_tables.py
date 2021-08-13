@@ -6,32 +6,44 @@ import sqlite3
 
 
 def add_users(connection: sqlite3.Connection) -> List[int]:
+    """Create table `users` with fields: `id`, `name`, `age`,
+        and fill it with random values
+    """
     cursor = connection.cursor()
 
+    # clear table if exists
     cursor.execute('''DROP TABLE IF EXISTS users''')
+    # create new table
     cursor.execute(
         '''CREATE TABLE users
         (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)'''
     )
 
+    # random name generator
     for parts in itertools.product(
             ["beebo", "babuleh", "muffin"], ["1", "2", "3", "4"],
             repeat=2
     ):
         name = "".join(parts)
         age = random.randint(14, 99)
+
+        # add new row (`id` is auto incremented, hence do not need to forward it)
         cursor.execute(
             '''INSERT INTO users (name, age) VALUES (?, ?)''',
             (name, age)
         )
+
+    # save changes in database
     connection.commit()
 
     print("users:")
+    # select 5 first users from `users` table
     for user in cursor.execute("SELECT * from users LIMIT 5").fetchall():
         print(user)
     print()
 
-    user_ids = [user_id for (user_id,) in cursor.execute("SELECT id from users").fetchall()]
+    # select row `id` from `users` table
+    user_ids = [user_id for (user_id,) in cursor.execute("SELECT id FROM users").fetchall()]
     cursor.close()
 
     return user_ids
@@ -156,6 +168,7 @@ def add_sales(connection: sqlite3.Connection):
 def filter_usages(connection: sqlite3.Connection):
     cursor = connection.cursor()
 
+    # delete rows that match condition
     cursor.execute(
         '''DELETE FROM usages WHERE usages.timestamp > "2021-09-01 00:00:01"'''
     )
@@ -167,6 +180,7 @@ def filter_usages(connection: sqlite3.Connection):
 def update_usages(connection: sqlite3.Connection):
     cursor = connection.cursor()
 
+    # replace rows that match conditions
     cursor.execute(
         '''UPDATE usages set service_id = 1 WHERE
         usages.service_id = 2 AND usages.timestamp < "2021-08-01 00:00:01"'''
@@ -186,6 +200,7 @@ def main():
     add_week_numbers(connection)
     add_sales(connection)
 
+    # count number of rows in each table
     print("n_users:", cursor.execute("SELECT COUNT(*) FROM users").fetchone()[0])
     print("n_services:", cursor.execute("SELECT COUNT(*) FROM services").fetchone()[0])
     print("n_usages:", cursor.execute("SELECT COUNT(*) FROM usages").fetchone()[0])
