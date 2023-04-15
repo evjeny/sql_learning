@@ -94,7 +94,7 @@ def add_usages(connection: sqlite3.Connection,
         (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, service_id INTEGER, timestamp TIMESTAMP)'''
     )
 
-    now = datetime.datetime.now()
+    now = datetime.datetime(2021, 7, 1)
     for user_id in user_ids:
         n_usages = random.randint(min_usages, max_usages)
         period = random.randint(min_period_days, max_period_days)
